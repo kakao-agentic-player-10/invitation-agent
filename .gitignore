@@ -5,6 +5,7 @@ venv/
 .env
 .env.*
 .claude/
+scripts/
 *.egg-info/
 dist/
 build/
