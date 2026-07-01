@@ -50,6 +50,11 @@ class KakaoClient:
 
     async def search_address(self, query: str) -> dict | None:
         """주소 문자열을 좌표로 변환. 첫 번째 결과 반환."""
+        if self._settings.kakao_local_proxy_base_url:
+            payload = await self._proxy_post("address", {"query": query, "size": 1})
+            docs = payload.get("documents", [])
+            return docs[0] if docs else None
+
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
                 f"{LOCAL_BASE}/v2/local/search/address.json",
@@ -63,6 +68,11 @@ class KakaoClient:
 
     async def search_keyword(self, query: str) -> dict | None:
         """장소명(키워드) 검색. 좌표·정제주소를 한 번에 얻을 때 사용."""
+        if self._settings.kakao_local_proxy_base_url:
+            payload = await self._proxy_post("keyword", {"query": query, "size": 1})
+            docs = payload.get("documents", [])
+            return docs[0] if docs else None
+
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
                 f"{LOCAL_BASE}/v2/local/search/keyword.json",
@@ -76,6 +86,21 @@ class KakaoClient:
 
     async def nearest_subway(self, lng: float, lat: float, radius: int = 2000) -> dict | None:
         """좌표 기준 가장 가까운 지하철역. (x=lng, y=lat, 거리순 정렬)"""
+        if self._settings.kakao_local_proxy_base_url:
+            payload = await self._proxy_post(
+                "category",
+                {
+                    "category_group_code": SUBWAY_CATEGORY,
+                    "x": lng,
+                    "y": lat,
+                    "radius": radius,
+                    "sort": "distance",
+                    "size": 1,
+                },
+            )
+            docs = payload.get("documents", [])
+            return docs[0] if docs else None
+
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
                 f"{LOCAL_BASE}/v2/local/search/category.json",
@@ -93,6 +118,18 @@ class KakaoClient:
             raise KakaoError(f"지하철역 검색 실패 ({resp.status_code}): {resp.text}")
         docs = resp.json().get("documents", [])
         return docs[0] if docs else None
+
+    async def _proxy_post(self, path: str, payload: dict) -> dict:
+        base_url = self._settings.kakao_local_proxy_base_url.rstrip("/")
+        headers = {}
+        if self._settings.kakao_local_proxy_token:
+            headers["Authorization"] = f"Bearer {self._settings.kakao_local_proxy_token}"
+
+        async with httpx.AsyncClient(timeout=self._settings.kakao_local_proxy_timeout_seconds) as client:
+            resp = await client.post(f"{base_url}/{path}", json=payload, headers=headers)
+        if resp.status_code != 200:
+            raise KakaoError(f"Kakao Local 프록시 호출 실패 ({resp.status_code}): {resp.text}")
+        return resp.json()
 
     # --- 캘린더: 일정 조회 --------------------------------------------------
 

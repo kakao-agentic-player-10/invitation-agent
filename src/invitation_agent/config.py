@@ -16,6 +16,9 @@ class Settings(BaseSettings):
 
     # 카카오 로컬(주소/장소/지하철) 검색용 REST API 키 (앱 단위, 사용자 인증 아님)
     kakao_rest_api_key: str = ""
+    kakao_local_proxy_base_url: str = ""
+    kakao_local_proxy_token: str = ""
+    kakao_local_proxy_timeout_seconds: float = 10
 
     # 캘린더 인증: PlayMCP가 사용자 access token 을 매 요청마다 전달한다.
     #   - 기본은 MCP 표준 Authorization: Bearer <token> 헤더에서 수신.
@@ -42,7 +45,7 @@ class Settings(BaseSettings):
 
     @property
     def has_kakao_local(self) -> bool:
-        return bool(self.kakao_rest_api_key)
+        return bool(self.kakao_rest_api_key or self.kakao_local_proxy_base_url)
 
 
 @lru_cache

@@ -82,7 +82,9 @@ invitation-agent       # 또는: python -m invitation_agent.server
 
 | 변수 | 필수 | 기본값 | 용도 |
 |------|------|--------|------|
-| `KAKAO_REST_API_KEY` | ✅ | — | 주소/장소/지하철 검색 (Kakao Local API) |
+| `KAKAO_REST_API_KEY` | proxy 미사용 시 | — | 주소/장소/지하철 검색 (Kakao Local API) |
+| `KAKAO_LOCAL_PROXY_BASE_URL` | PlayMCP 배포 시 권장 | `https://playmcp-embedding-proxy.onrender.com/v1/kakao/local` | Kakao REST API 키를 직접 넣을 수 없을 때 사용할 proxy base URL |
+| `KAKAO_LOCAL_PROXY_TOKEN` | — | `""` | Kakao Local proxy 인증 토큰 |
 | `KAKAO_ACCESS_TOKEN` | 로컬 테스트 시 | — | 캘린더 API 사용자 토큰 (PlayMCP 없이 직접 테스트할 때) |
 | `INVITATION_AGENT_TOKEN_HEADER` | — | `""` | PlayMCP가 토큰을 전달하는 커스텀 헤더명 (표준 `Authorization` 외 헤더 사용 시) |
 | `INVITATION_AGENT_HOST` | — | `0.0.0.0` | HTTP 바인딩 주소 |
@@ -92,7 +94,9 @@ invitation-agent       # 또는: python -m invitation_agent.server
 | `INVITATION_AGENT_CONFLICT_WINDOW_MIN` | — | `120` | 캘린더 충돌 검사 윈도우(분) |
 | `INVITATION_AGENT_TIMEZONE` | — | `Asia/Seoul` | 일정 등록 타임존 |
 
-> 비밀값(`KAKAO_REST_API_KEY`, `KAKAO_ACCESS_TOKEN`)은 `.env` 파일 또는 런타임 환경변수로 주입한다. Dockerfile에 하드코딩 금지.
+> 비밀값(`KAKAO_REST_API_KEY`, `KAKAO_LOCAL_PROXY_TOKEN`, `KAKAO_ACCESS_TOKEN`)은 `.env` 파일 또는 런타임 환경변수로 주입한다. Dockerfile에 하드코딩 금지.
+> PlayMCP in KC처럼 런타임 환경변수 주입이 어려운 환경에서는 `KAKAO_LOCAL_PROXY_BASE_URL`만 Dockerfile 기본값으로 두고,
+> 실제 `KAKAO_REST_API_KEY`는 Render proxy 환경변수에만 보관한다.
 
 ## Docker
 
