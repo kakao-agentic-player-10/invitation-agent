@@ -20,6 +20,20 @@ class CalendarAuthError(RuntimeError):
     """캘린더 access token 을 찾지 못함."""
 
 
+TOKEN_HEADER_CANDIDATES = (
+    "authorization",
+    "x-authorization",
+    "x-access-token",
+    "x-oauth-access-token",
+    "x-kakao-access-token",
+    "x-mcp-access-token",
+    "x-mcp-oauth-token",
+    "x-playmcp-access-token",
+    "x-playmcp-oauth-token",
+    "x-playmcp-authorization",
+)
+
+
 def _current_headers() -> dict[str, str]:
     """현재 HTTP 요청의 헤더(소문자 키)를 반환. 컨텍스트가 없으면 빈 dict."""
     try:
@@ -52,11 +66,40 @@ def get_calendar_token() -> str:
     settings = get_settings()
     if settings.invitation_agent_token_header:
         if value := headers.get(settings.invitation_agent_token_header.lower()):
-            return value.strip()
+            if token := _normalize_token_value(value):
+                return token
+
+    for header_name in TOKEN_HEADER_CANDIDATES:
+        if header_name == "authorization":
+            continue
+        if value := headers.get(header_name):
+            if token := _normalize_token_value(value):
+                return token
 
     if settings.kakao_access_token:
         return settings.kakao_access_token
 
     raise CalendarAuthError(
-        "캘린더 access token 이 없습니다. PlayMCP가 전달한 토큰(Authorization 헤더)이 필요합니다."
+        "캘린더 access token 이 없습니다. PlayMCP가 Authorization 헤더나 token 헤더로 "
+        f"토큰을 전달해야 합니다. 현재 요청 헤더: {_safe_header_names(headers)}"
     )
+
+
+def _normalize_token_value(value: str) -> str:
+    token = value.strip()
+    if not token:
+        return ""
+    if token.lower().startswith("bearer "):
+        return token.split(" ", 1)[1].strip()
+    if token.lower().startswith("basic "):
+        return ""
+    return token
+
+
+def _safe_header_names(headers: dict[str, str]) -> str:
+    names = [
+        name
+        for name in headers
+        if name not in {"authorization", "cookie", "set-cookie"}
+    ][:20]
+    return ", ".join(names) if names else "없음"
