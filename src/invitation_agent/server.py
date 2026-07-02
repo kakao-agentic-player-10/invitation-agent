@@ -15,6 +15,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from invitation_agent.config import get_settings
+from invitation_agent.services import kakao_oauth
 from invitation_agent.tools import calendar, invitation, location
 
 mcp = FastMCP(
@@ -54,6 +55,16 @@ location.register_route(mcp)
 @mcp.custom_route("/health", methods=["GET"])
 async def health(request: Request) -> JSONResponse:
     return JSONResponse({"status": "ok"})
+
+
+@mcp.custom_route("/oauth/kakao/authorize", methods=["GET"])
+async def kakao_oauth_authorize(request: Request):
+    return await kakao_oauth.authorize(request)
+
+
+@mcp.custom_route("/oauth/kakao/token", methods=["POST"])
+async def kakao_oauth_token(request: Request):
+    return await kakao_oauth.token(request)
 
 
 def main() -> None:

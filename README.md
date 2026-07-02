@@ -42,6 +42,22 @@ PlayMCP (OAuth 전담)  ──access token(요청 헤더)──▶  invitation-a
 > `https://playmcp.kakao.com/api/v1/applied-mcps/{mcpId}/authorize/oauth:callback` 로 설정,
 > 동의항목에 `talk_calendar` 추가, 개인정보 제3자 제공 동의(제공받는자: ㈜카카오) 화면 구성.
 
+PlayMCP의 OAuth 클라이언트가 Kakao token endpoint와 직접 맞지 않으면 서버 내부 OAuth adapter를 사용한다.
+
+```text
+Authorization Endpoint URL:
+https://invitation-agent.playmcp-endpoint.kakaocloud.io/oauth/kakao/authorize
+
+Token Endpoint URL:
+https://invitation-agent.playmcp-endpoint.kakaocloud.io/oauth/kakao/token
+
+Scope:
+talk_calendar
+```
+
+Client ID는 Kakao Developers 앱의 REST API 키를 사용하고, Client Secret은 같은 앱의 Client Secret 값을 사용한다.
+Kakao Developers에는 PlayMCP가 이메일로 발급한 Redirect URI를 등록한다.
+
 ## MCP Tool 목록
 
 **총 5개 tool** (인증 tool 없음 — PlayMCP가 인증 처리).
