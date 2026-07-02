@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 
 class InvitationContent(BaseModel):
-    """렌더링된 청첩장 원본 콘텐츠.
+    """청첩장 페이지에서 추출한 콘텐츠.
 
     추출(이름·날짜·시간·장소)은 호스트(PlayMCP) AI가 이 내용을 읽어 수행한다.
     """
@@ -18,7 +18,7 @@ class InvitationContent(BaseModel):
     final_url: str = Field(description="리다이렉트 추적 후 최종 URL")
     text: str = Field(description="페이지에서 추출한 본문 텍스트")
     image_urls: list[str] = Field(default_factory=list)
-    rendered_with: str = Field(description="playwright | httpx")
+    rendered_with: str = Field(description="본문 추출 방식")
 
 
 # --- geocode_address -------------------------------------------------------

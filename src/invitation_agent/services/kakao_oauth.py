@@ -1,8 +1,8 @@
-"""Kakao OAuth adapter routes for generic OAuth clients.
+"""일반 OAuth 클라이언트를 Kakao OAuth 형식에 맞춰 중계하는 route.
 
-PlayMCP's generic OAuth client may send token requests in a shape that Kakao
-does not accept directly. These helpers keep PlayMCP configured as OAuth while
-normalizing the request to Kakao's REST API contract.
+PlayMCP의 범용 OAuth 클라이언트가 Kakao token endpoint와 직접 맞지 않는
+요청을 보낼 수 있어, OAuth 설정은 유지하되 Kakao REST API 계약에 맞춰
+요청 형태를 정리한다.
 """
 
 from __future__ import annotations

@@ -2,7 +2,7 @@
 
 PlayMCP가 OAuth 전체(로그인/동의/redirect/토큰 교환)를 처리한다. 토큰이
 MCP 요청 헤더로 전달되면 그 값을 우선 사용하고, 전달되지 않는 환경에서는
-OAuth adapter가 저장한 최신 토큰을 폴백으로 사용한다.
+OAuth 중계 endpoint가 저장한 최신 토큰을 폴백으로 사용한다.
 
 전달 방식(헤더 이름)은 PlayMCP 규약을 따른다. 기본은 MCP 표준인
 `Authorization: Bearer <token>` 이며, 다른 헤더를 쓰면 INVITATION_AGENT_TOKEN_HEADER 로 지정한다.
@@ -55,7 +55,7 @@ def get_calendar_token() -> str:
       1) Authorization: Bearer <token>  (MCP 표준)
       2) INVITATION_AGENT_TOKEN_HEADER 로 지정한 커스텀 헤더
       3) KAKAO_ACCESS_TOKEN  (로컬 테스트 폴백)
-      4) OAuth adapter가 저장한 최신 token
+      4) OAuth 중계 endpoint가 저장한 최신 token
     """
     headers = _current_headers()
 
