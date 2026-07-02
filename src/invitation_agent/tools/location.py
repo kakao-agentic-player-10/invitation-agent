@@ -32,7 +32,11 @@ def register(mcp: FastMCP) -> None:
         """
         settings = get_settings()
         client = KakaoClient(settings)
-        doc = await client.search_keyword(query) or await client.search_address(query)
+        try:
+            doc = await client.search_keyword(query)
+        except KakaoError:
+            doc = None
+        doc = doc or await client.search_address(query)
         if not doc:
             raise KakaoError(f"'{query}' 에 대한 좌표를 찾지 못했습니다.")
         return GeocodeResult(

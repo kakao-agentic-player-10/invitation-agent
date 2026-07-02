@@ -113,6 +113,9 @@ invitation-agent       # 또는: python -m invitation_agent.server
 | `KAKAO_REST_API_KEY` | proxy 미사용 시 | — | 주소/장소/지하철 검색 (Kakao Local API) |
 | `KAKAO_LOCAL_PROXY_BASE_URL` | PlayMCP 배포 시 권장 | `https://playmcp-embedding-proxy.onrender.com/v1/kakao/local` | Kakao REST API 키를 직접 넣을 수 없을 때 사용할 proxy base URL |
 | `KAKAO_LOCAL_PROXY_TOKEN` | — | `""` | Kakao Local proxy 인증 토큰 |
+| `KAKAO_LOCAL_PROXY_TIMEOUT_SECONDS` | — | `10` | Kakao Local proxy 요청 타임아웃 |
+| `KAKAO_LOCAL_PROXY_RETRY_COUNT` | — | `2` | 일시적 timeout/5xx 응답 시 최대 시도 횟수 |
+| `KAKAO_LOCAL_PROXY_RETRY_DELAY_SECONDS` | — | `0.35` | proxy 재시도 전 기본 대기 시간 |
 | `KAKAO_ACCESS_TOKEN` | 로컬 테스트 시 | — | 캘린더 API 사용자 토큰 (PlayMCP 없이 직접 테스트할 때) |
 | `INVITATION_AGENT_TOKEN_HEADER` | — | `""` | PlayMCP가 토큰을 전달하는 커스텀 헤더명 (표준 `Authorization` 외 헤더 사용 시) |
 | `INVITATION_AGENT_CALENDAR_TOKEN_STORE_PATH` | — | `/tmp/invitation_agent_kakao_token.json` | PlayMCP OAuth adapter가 교환한 캘린더 토큰 저장 경로 |

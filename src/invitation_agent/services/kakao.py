@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import httpx
@@ -125,11 +126,32 @@ class KakaoClient:
         if self._settings.kakao_local_proxy_token:
             headers["Authorization"] = f"Bearer {self._settings.kakao_local_proxy_token}"
 
+        attempts = max(1, self._settings.kakao_local_proxy_retry_count)
+        last_error = ""
         async with httpx.AsyncClient(timeout=self._settings.kakao_local_proxy_timeout_seconds) as client:
-            resp = await client.post(f"{base_url}/{path}", json=payload, headers=headers)
-        if resp.status_code != 200:
-            raise KakaoError(f"Kakao Local 프록시 호출 실패 ({resp.status_code}): {resp.text}")
-        return resp.json()
+            for attempt in range(1, attempts + 1):
+                try:
+                    resp = await client.post(f"{base_url}/{path}", json=payload, headers=headers)
+                except (httpx.TimeoutException, httpx.TransportError) as exc:
+                    last_error = str(exc) or exc.__class__.__name__
+                    if attempt < attempts:
+                        await asyncio.sleep(self._retry_delay(attempt))
+                        continue
+                    raise KakaoError(f"Kakao Local 프록시 호출 실패: {last_error}") from exc
+
+                if resp.status_code == 200:
+                    return resp.json()
+
+                last_error = f"{resp.status_code}: {resp.text}"
+                if attempt < attempts and _is_retryable_status(resp.status_code):
+                    await asyncio.sleep(self._retry_delay(attempt))
+                    continue
+                raise KakaoError(f"Kakao Local 프록시 호출 실패 ({last_error})")
+
+        raise KakaoError(f"Kakao Local 프록시 호출 실패: {last_error or 'unknown error'}")
+
+    def _retry_delay(self, attempt: int) -> float:
+        return self._settings.kakao_local_proxy_retry_delay_seconds * attempt
 
     # --- 캘린더: 일정 조회 --------------------------------------------------
 
@@ -230,3 +252,7 @@ class KakaoClient:
         if resp.status_code != 200:
             raise KakaoError(f"일정 생성 실패 ({resp.status_code}): {resp.text}")
         return resp.json().get("event_id", "")
+
+
+def _is_retryable_status(status_code: int) -> bool:
+    return status_code in {408, 429} or 500 <= status_code < 600

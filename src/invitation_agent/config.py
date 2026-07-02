@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     kakao_local_proxy_base_url: str = ""
     kakao_local_proxy_token: str = ""
     kakao_local_proxy_timeout_seconds: float = 10
+    kakao_local_proxy_retry_count: int = 2
+    kakao_local_proxy_retry_delay_seconds: float = 0.35
 
     # 캘린더 인증: PlayMCP가 사용자 access token 을 매 요청마다 전달한다.
     #   - 기본은 MCP 표준 Authorization: Bearer <token> 헤더에서 수신.
