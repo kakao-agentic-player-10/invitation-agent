@@ -136,7 +136,8 @@ def register(mcp: FastMCP) -> None:
         """invitation-agent:Create an event on the user's Kakao(카카오) calendar from extracted invitation data.
 
         date is YYYY-MM-DD, time is HH:MM (KST). title max 50 chars. Pass place_name/address
-        (and lat/lng if known) for the location. `reminders` is a list of minutes-before-start
+        for the location; lat/lng are optional and should be omitted if geocoding failed.
+        `reminders` is a list of minutes-before-start
         (max 2, each 0 < m <= 43200; e.g. [1440] = 1 day before, [60] = 1 hour before).
         IMPORTANT: only set `reminders` when the user explicitly asks for an alert; otherwise
         leave it empty so no reminder is added.

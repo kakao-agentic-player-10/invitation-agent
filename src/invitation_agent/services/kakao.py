@@ -11,7 +11,10 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
+import json
 import logging
+import time
 
 import httpx
 
@@ -25,6 +28,7 @@ KAPI_BASE = "https://kapi.kakao.com"
 
 # 카카오 로컬 카테고리 코드: SW8 = 지하철역
 SUBWAY_CATEGORY = "SW8"
+_LOCAL_PROXY_CACHE: dict[str, tuple[float, dict]] = {}
 
 
 class KakaoError(RuntimeError):
@@ -126,6 +130,10 @@ class KakaoClient:
         if self._settings.kakao_local_proxy_token:
             headers["Authorization"] = f"Bearer {self._settings.kakao_local_proxy_token}"
 
+        cache_key = _cache_key(path, payload)
+        if cached := _cache_get(cache_key, allow_stale=False):
+            return cached
+
         attempts = max(1, self._settings.kakao_local_proxy_retry_count)
         last_error = ""
         async with httpx.AsyncClient(timeout=self._settings.kakao_local_proxy_timeout_seconds) as client:
@@ -137,17 +145,25 @@ class KakaoClient:
                     if attempt < attempts:
                         await asyncio.sleep(self._retry_delay(attempt))
                         continue
+                    if cached := _cache_get(cache_key, allow_stale=True):
+                        return cached
                     raise KakaoError(f"Kakao Local 프록시 호출 실패: {last_error}") from exc
 
                 if resp.status_code == 200:
-                    return resp.json()
+                    data = resp.json()
+                    _cache_put(cache_key, data, self._settings.kakao_local_cache_ttl_seconds)
+                    return data
 
                 last_error = f"{resp.status_code}: {resp.text}"
                 if attempt < attempts and _is_retryable_status(resp.status_code):
                     await asyncio.sleep(self._retry_delay(attempt))
                     continue
+                if cached := _cache_get(cache_key, allow_stale=True):
+                    return cached
                 raise KakaoError(f"Kakao Local 프록시 호출 실패 ({last_error})")
 
+        if cached := _cache_get(cache_key, allow_stale=True):
+            return cached
         raise KakaoError(f"Kakao Local 프록시 호출 실패: {last_error or 'unknown error'}")
 
     def _retry_delay(self, attempt: int) -> float:
@@ -207,8 +223,6 @@ class KakaoClient:
           event.reminders   시작 전 알림(분) 최대 2개, 0<값≤43200  (요청 시에만)
           event.description 설명 (최대 5000자, 선택)
         """
-        import json
-
         event: dict = {
             "title": title[:50],  # 최대 50자
             "time": {
@@ -256,3 +270,23 @@ class KakaoClient:
 
 def _is_retryable_status(status_code: int) -> bool:
     return status_code in {408, 429} or 500 <= status_code < 600
+
+
+def _cache_key(path: str, payload: dict) -> str:
+    return f"{path}:{json.dumps(payload, ensure_ascii=False, sort_keys=True)}"
+
+
+def _cache_get(key: str, *, allow_stale: bool) -> dict | None:
+    item = _LOCAL_PROXY_CACHE.get(key)
+    if not item:
+        return None
+    expires_at, value = item
+    if allow_stale or expires_at > time.monotonic():
+        return deepcopy(value)
+    return None
+
+
+def _cache_put(key: str, value: dict, ttl_seconds: int) -> None:
+    if ttl_seconds <= 0:
+        return
+    _LOCAL_PROXY_CACHE[key] = (time.monotonic() + ttl_seconds, deepcopy(value))
