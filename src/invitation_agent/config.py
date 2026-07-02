@@ -24,8 +24,10 @@ class Settings(BaseSettings):
     #   - 기본은 MCP 표준 Authorization: Bearer <token> 헤더에서 수신.
     #   - PlayMCP가 다른 헤더로 전달하면 INVITATION_AGENT_TOKEN_HEADER 로 그 이름을 지정.
     #   - 로컬 테스트용 폴백 토큰: KAKAO_ACCESS_TOKEN
+    #   - PlayMCP가 헤더로 토큰을 넘기지 않으면 OAuth adapter가 교환한 토큰을 파일에 저장해 폴백으로 쓴다.
     invitation_agent_token_header: str = ""
     kakao_access_token: str = ""  # 로컬 테스트 폴백
+    invitation_agent_calendar_token_store_path: str = "/tmp/invitation_agent_kakao_token.json"
 
     # 서버 전송 (Streamable HTTP, Remote, stateless) — PlayMCP 요구사항
     invitation_agent_host: str = "0.0.0.0"

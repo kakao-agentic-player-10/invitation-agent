@@ -23,8 +23,9 @@ mcp = FastMCP(
     instructions=(
         "invitation-agent: fetch a mobile invitation page so the assistant can extract the schedule, "
         "then register it on the user's calendar. The assistant (host AI) does the extraction; "
-        "this server fetches content and calls Kakao APIs. Authentication is handled by PlayMCP, "
-        "which forwards the access token to this server. "
+        "this server fetches content and calls Kakao APIs. Calendar authentication is handled by "
+        "PlayMCP OAuth; if PlayMCP does not forward the access token on tool calls, this server "
+        "uses the token saved during the Kakao OAuth token exchange. "
         "Recommended order: fetch_invitation(url) → (read the content, extract date/time/place) → "
         "(geocode_address for coordinates) → check_calendar_conflict → create_calendar_event. "
         "Optional: guide_route (coordinates → nearest station, walking route, map links).\n\n"
@@ -41,7 +42,10 @@ mcp = FastMCP(
         "title, start time, and end time (format times in KST, e.g. 2025-06-15 14:00). "
         "If a conflicting event's title is null or empty, do NOT display '(제목 없음)' — "
         "instead display '직접 등록하신 일정이 있습니다. 카카오 캘린더에서 확인해 보세요.' "
-        "in place of the title for that event."
+        "in place of the title for that event.\n"
+        "3. If a calendar tool reports that auth is missing, call get_calendar_auth_status. "
+        "If authenticated=false, ask the user to click this MCP's PlayMCP authentication button "
+        "and retry after authentication completes."
     ),
 )
 

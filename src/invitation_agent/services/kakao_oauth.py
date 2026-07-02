@@ -16,6 +16,8 @@ import httpx
 from starlette.requests import Request
 from starlette.responses import JSONResponse, RedirectResponse, Response
 
+from invitation_agent.services.calendar_token_store import save_token_response
+
 
 KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize"
 KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token"
@@ -71,7 +73,10 @@ async def token(request: Request) -> Response:
 
     content_type = response.headers.get("content-type", "")
     if "application/json" in content_type:
-        return JSONResponse(response.json(), status_code=response.status_code)
+        body = response.json()
+        if response.status_code == 200:
+            save_token_response(body)
+        return JSONResponse(body, status_code=response.status_code)
     return Response(
         content=response.content,
         status_code=response.status_code,

@@ -13,6 +13,7 @@ from fastmcp import FastMCP
 
 from invitation_agent.config import get_settings
 from invitation_agent.models import CalendarEvent, ConflictResult, CreateEventResult
+from invitation_agent.services.calendar_token_store import describe_token_status
 from invitation_agent.services.kakao import KakaoClient
 
 
@@ -35,6 +36,23 @@ def _to_rfc3339_utc(dt: datetime) -> str:
 
 
 def register(mcp: FastMCP) -> None:
+    @mcp.tool(
+        annotations={
+            "title": "Get calendar auth status",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )
+    async def get_calendar_auth_status() -> dict:
+        """invitation-agent:Check whether Kakao Calendar OAuth is ready.
+
+        Call this when calendar tools fail with an auth error. It never returns
+        access token values.
+        """
+        return describe_token_status()
+
     @mcp.tool(
         annotations={
             "title": "Check calendar conflict",
